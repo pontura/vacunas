@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "653872180972",
+    "firebase_url": "https://vaccinevr.firebaseio.com",
+    "project_id": "vaccinevr",
+    "storage_bucket": "vaccinevr.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:653872180972:android:2358c1c94dcd4d0d",
+        "android_client_info": {
+          "package_name": "com.test.vaccine"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "653872180972-lc66vmlr7a96r7gv5p1utrp0jfr20l6v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1Lsn_R9v87VCfw-VWDE3qmHinyQoa344"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
