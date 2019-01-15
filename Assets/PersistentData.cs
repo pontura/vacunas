@@ -9,7 +9,7 @@ public class PersistentData : Singleton<PersistentData> {
 	public AudiosManager audios;
 	public bool langSelected;
 	public languages lang;
-
+	public ServerLogin serverLogin;
 	public enum languages
 	{
 		EN,
@@ -21,13 +21,8 @@ public class PersistentData : Singleton<PersistentData> {
 	void Start()
 	{
 		audios = GetComponent<AudiosManager> ();
+		serverLogin = GetComponent<ServerLogin> ();
 		DontDestroyOnLoad (this.gameObject);
-
-
-//		if(!DEBBUGER && (lastMonthChecked==0 || month != lastMonthChecked))
-//			UnityEngine.SceneManagement.SceneManager.LoadScene("001_Password");
-//		else
-//			UnityEngine.SceneManagement.SceneManager.LoadScene("001_Oculus");
 	}
 
 }
