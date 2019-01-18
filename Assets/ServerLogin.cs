@@ -7,7 +7,9 @@ public class ServerLogin : MonoBehaviour {
 
 	public string usernameInserted;
 	public string passwordInserted;
+	public string dispositivo;
 
+	public bool CheckIfDeviceIsStillRegistered;
 	public bool ResetDevice;
 	public string url = "http://www.pontura.com/dermic/";
 	public string deviceName;
@@ -19,7 +21,7 @@ public class ServerLogin : MonoBehaviour {
 	public int nowMonth;
 	public int nowDay;
 
-	bool hasInternet = true;
+	bool hasInternet = false;
 
 	JsonLoginData jsonLoginResult;
 
@@ -42,21 +44,58 @@ public class ServerLogin : MonoBehaviour {
 		if(ResetDevice)
 			PlayerPrefs.DeleteAll ();
 		
-		CheckExpirationValue ();
+		LoadDataSaved ();
+
+		LoopForInternet ();
+		SetDebbugText ("Loading data");
+		Invoke ("Delayed", 3);
 
 		Events.OnKeyboardFieldEntered += OnKeyboardFieldEntered;
+	}
+	void LoadDataSaved()
+	{
+		dispositivo = PlayerPrefs.GetString ("dispositivo");
+		deviceName = PlayerPrefs.GetString ("deviceName");
+		expiredYear = PlayerPrefs.GetInt ("expiredYear", expiredYear);
+		expiredMonth = PlayerPrefs.GetInt ("expiredMonth", expiredMonth);
+		expiredDay = PlayerPrefs.GetInt ("expiredDay", expiredDay);
+	}
+	void Delayed()
+	{		
+		if (dispositivo != "")
+		{
+			if (!hasInternet) {
+				SetDebbugText ("Please, connect your device to continue");
+				CheckIfDeviceIsStillRegistered = true;
+			} else {
+				CancelInvoke ();
+				StartCoroutine( CheckingIfDeviceIsStillRegistered () );
+			}
+		} else {		
+			CancelInvoke ();	
+			CheckExpirationValue ();
+		}
+	}
+	void Connected()
+	{
+		if (CheckIfDeviceIsStillRegistered) {
+			SetDebbugText ("Checking device...");
+			StartCoroutine( CheckingIfDeviceIsStillRegistered () );
+		}
 	}
 	void CheckExpirationValue()
 	{
 		expired = CheckExpiration ();
 		if (expired) {
-			SetDebbugText ("Licence expired!");
+			SetDebbugText ("Please, re-enter user and password");
 			GotoLogin ();
 		} else if (expiredYear != 0) {
 			SetDebbugText ("Licence expiration date: " + expiredYear + "/" + expiredMonth + "/" + expiredDay);
-			LoadScene ("002_Main", 3);
-		}
+			GotoMain ();
+		} else
+			GotoLogin ();
 	}
+
 	public bool expired;
 	bool CheckExpiration()
 	{
@@ -64,10 +103,7 @@ public class ServerLogin : MonoBehaviour {
 		nowMonth = DateTime.Now.Month;
 		nowDay = DateTime.Now.Day;
 
-		deviceName = PlayerPrefs.GetString ("deviceName");
-		expiredYear = PlayerPrefs.GetInt ("expiredYear", expiredYear);
-		expiredMonth = PlayerPrefs.GetInt ("expiredMonth", expiredMonth);
-		expiredDay = PlayerPrefs.GetInt ("expiredDay", expiredDay);
+		LoadDataSaved ();
 
 		if (deviceName.Length > 0) {
 			if (expiredYear > nowYear)
@@ -83,11 +119,11 @@ public class ServerLogin : MonoBehaviour {
 
 	public void Init()
 	{
-		if (deviceName.Length > 1) {
-			if (expired) 
-				LoopForInternet ();
-		} else
-			LoopForInternet ();
+//		if (deviceName.Length > 1) {
+//			if (expired) 
+//				LoopForInternet ();
+//		} else
+//			LoopForInternet ();
 	}
 	void OnKeyboardFieldEntered(string text)
 	{
@@ -102,32 +138,33 @@ public class ServerLogin : MonoBehaviour {
 	}
 	void LoopForInternet()
 	{
-		Invoke ("LoopForInternet", 1);
-		if (Application.internetReachability == NetworkReachability.NotReachable && hasInternet)
-			SwitchInternetConnection ();
-		else if(Application.internetReachability != NetworkReachability.NotReachable && !hasInternet)
-			SwitchInternetConnection ();		
-	}
-	void SwitchInternetConnection()
-	{
-		hasInternet = !hasInternet;
+		Invoke ("LoopForInternet", 2);
+
+		StartCoroutine (checkInternetConnection ());
+
 		if(!hasInternet)
-			SetDebbugText ("No internet connection, please connect your device");
+			SetDebbugText ("No internet connection, please connect your device and re-open the app");
 		else
 			SetDebbugText ("Internet connected!");
+
+		if (hasInternet)
+			Connected ();
 	}
 	void DeviceRegistered()
 	{
 		Events.OnKeyboardTitle( "Device registered: " + deviceName);
-		LoadScene ("002_Main", 3);
+		GotoMain ();
 	}
 	public void Login()
 	{
-		if (deviceName.Length > 0 && !expired ) {
-			SetDebbugText ("Device already registered: " + deviceName);
+//		if (deviceName.Length > 0 && !expired ) {
+//			SetDebbugText ("Device already registered: " + deviceName);
+//		}
+//		else 
+		if (usernameInserted == "" || passwordInserted == "") {
+			SetDebbugText ("Username or password incorrect");
+			GotoLogin ();
 		}
-		else if(usernameInserted =="" || passwordInserted == "")
-			SetDebbugText ("Username or password not inserted");
 		else
 			StartCoroutine(LoginDone());
 	}
@@ -171,9 +208,18 @@ public class ServerLogin : MonoBehaviour {
 	{
 		Events.OnKeyboardText( "" );
 	}
+	string GetUniqueID()
+	{
+		int a = UnityEngine.Random.Range (1, 10000);
+		int b = UnityEngine.Random.Range (1, 10000);
+		int c = UnityEngine.Random.Range (1, 10000);
+		return jsonLoginResult.result [0].nombre + "_" + a.ToString () + b.ToString () + c.ToString ();
+	}
 	IEnumerator Register()
 	{
-		string post_url = url + "app_register.php" + "?cliente_id=" + jsonLoginResult.result[0].id + "&password=" + passwordInserted;
+		dispositivo = GetUniqueID();
+		PlayerPrefs.SetString ("dispositivo", dispositivo);
+		string post_url = url + "app_register.php" + "?cliente_id=" + jsonLoginResult.result[0].id + "&password=" + passwordInserted + "&dispositivo=" + dispositivo ;
 		Debug.Log (post_url);
 		WWW hs_post = new WWW(post_url);
 		yield return hs_post;
@@ -192,12 +238,12 @@ public class ServerLogin : MonoBehaviour {
 			GotoLogin ();
 		}else
 		{
-			deviceName = hs_post.text;
-			SaveName(deviceName); 
+			SaveName(hs_post.text); 
 		}
 	}
-	void SaveName(string deviceName)
+	void SaveName(string _deviceName)
 	{	
+		deviceName = _deviceName;
 		PlayerPrefs.SetString ("deviceName", deviceName);
 		DeviceRegistered ();
 		SetLicencia( jsonLoginResult.result [0].licencia );	
@@ -205,7 +251,7 @@ public class ServerLogin : MonoBehaviour {
 	void SetLicencia(string licencia)
 	{
 		string[] dates = licencia.Split ("-" [0]);
-		Debug.Log ("licencia: " + licencia);
+		Events.OnKeyboardText("New Licence: " + licencia);
 
 		if (dates.Length > 1) {
 			expiredYear = int.Parse (dates [0]);
@@ -217,6 +263,11 @@ public class ServerLogin : MonoBehaviour {
 			PlayerPrefs.SetInt ("expiredDay", expiredDay);
 			CheckExpirationValue ();
 		}
+	}
+	void GotoMain()
+	{
+		CancelInvoke ();
+		LoadScene ("002_Main", 1);
 	}
 	void GotoLogin()
 	{
@@ -239,4 +290,43 @@ public class ServerLogin : MonoBehaviour {
 		yield return new WaitForSeconds (delay);
 		UnityEngine.SceneManagement.SceneManager.LoadScene (sceneName);
 	}
+
+	IEnumerator CheckingIfDeviceIsStillRegistered()
+	{
+		string post_url = url + "app_check_device.php?dispositivo=" + dispositivo;
+
+		SetDebbugText("Checking if your device is still registered...");
+
+		WWW hs_post = new WWW(post_url);
+		yield return hs_post;
+
+		if (hs_post.error != null)
+		{
+			SetDebbugText("Error: " + hs_post.error);
+			GotoLogin ();
+		} else if (hs_post.text == "ok")
+		{
+			CheckExpirationValue ();
+		} else
+		{
+			SetDebbugText("Your device is no longer registered. ID: " + dispositivo + hs_post.text);
+			PlayerPrefs.DeleteAll ();
+			GotoLogin ();
+		}
+	}
+
+
+	IEnumerator checkInternetConnection(){
+		WWW www = new WWW("http://google.com");
+		yield return www;
+		if (www.error != null) {
+			hasInternet = false;
+		} else {
+			hasInternet = true;;
+		}
+	} 
+
+
 }
+
+
