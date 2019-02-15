@@ -22,6 +22,7 @@ public class PersistentData : Singleton<PersistentData> {
 	{
 		audios = GetComponent<AudiosManager> ();
 		serverLogin = GetComponent<ServerLogin> ();
+		serverLogin.Init ();
 		DontDestroyOnLoad (this.gameObject);
 	}
 

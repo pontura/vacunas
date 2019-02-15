@@ -5,22 +5,23 @@ using UnityEngine.UI;
 
 public class UIDebugger : Singleton<UIDebugger>
 {
-	public GameObject panel;
 	public Text field;
 
-	void Start()
-	{
-		Reset ();
+	void Awake()
+	{		
+		Events.OnKeyboardText += OnKeyboardText;
 	}
-	public void SetField(string text) {
-		CancelInvoke ();
-		panel.SetActive (true);
+	void OnDestroy()
+	{
+		Events.OnKeyboardText -= OnKeyboardText;
+	}
+	void OnKeyboardText(string text)
+	{
 		field.text = text;
-		Invoke ("Reset", 1);
+		Invoke ("Reset", 5);
 	}
 	void Reset()
 	{
 		field.text = "";
-		panel.SetActive (false);
 	}
 }

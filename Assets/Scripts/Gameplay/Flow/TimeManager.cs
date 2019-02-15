@@ -240,7 +240,8 @@ public class TimeManager : Singleton<TimeManager>
 	{
 		if (PersistentData.Instance.DEBBUGER)
 			return;
-		
+
+		PersistentData.Instance.serverLogin.Init ();
 		masker.SetActive (true);
 		ResetScene ();
 	}

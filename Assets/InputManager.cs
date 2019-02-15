@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class InputManager : Singleton<InputManager>
 {
-	public Text debbug;
 	public types type;
 
 	public bool button1Clicked;
@@ -29,7 +28,7 @@ public class InputManager : Singleton<InputManager>
 	float axis;
 
 	void Update () {
-		debbug.text = button1Clicked + "-" + button2Clicked + "-" + OVRInput.Get(OVRInput.Axis1D.Any);
+		//debbug.text = button1Clicked + "-" + button2Clicked + "-" + OVRInput.Get(OVRInput.Axis1D.Any);
 
 		if (Input.GetKeyDown (KeyCode.Space)) {
 			SetNewGesto (types.GATILLO_DOWN);
@@ -144,8 +143,8 @@ public class InputManager : Singleton<InputManager>
 	{
 		this.type = type;
 
-		if(uiDebugger != null)
-			uiDebugger.SetField (type.ToString ());
+//		if(uiDebugger != null)
+//			uiDebugger.OnKeyboardText (type.ToString ());
 
 		OnInput (type);
 	}

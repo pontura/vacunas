@@ -8,6 +8,9 @@ public class ServerLogin : MonoBehaviour {
 	public string usernameInserted;
 	public string passwordInserted;
 	public string dispositivo;
+	public int daysWithnoInternet;
+	public int dayWithNoInternet;
+	public int totalDaysWithNoInternet;
 
 	public bool CheckIfDeviceIsStillRegistered;
 	public bool ResetDevice;
@@ -44,13 +47,14 @@ public class ServerLogin : MonoBehaviour {
 		if(ResetDevice)
 			PlayerPrefs.DeleteAll ();
 		
+		Events.OnKeyboardFieldEntered += OnKeyboardFieldEntered;
+	}
+	public void Init()
+	{		
 		LoadDataSaved ();
-
 		LoopForInternet ();
 		SetDebbugText ("Loading data");
 		Invoke ("Delayed", 3);
-
-		Events.OnKeyboardFieldEntered += OnKeyboardFieldEntered;
 	}
 	void LoadDataSaved()
 	{
@@ -59,15 +63,28 @@ public class ServerLogin : MonoBehaviour {
 		expiredYear = PlayerPrefs.GetInt ("expiredYear", expiredYear);
 		expiredMonth = PlayerPrefs.GetInt ("expiredMonth", expiredMonth);
 		expiredDay = PlayerPrefs.GetInt ("expiredDay", expiredDay);
+		daysWithnoInternet = PlayerPrefs.GetInt ("daysWithnoInternet", daysWithnoInternet);
 	}
 	void Delayed()
 	{		
 		if (dispositivo != "")
 		{
 			if (!hasInternet) {
-				SetDebbugText ("Please, connect your device to continue");
-				CheckIfDeviceIsStillRegistered = true;
+				if(PlayerPrefs.GetInt ("dayWithNoInternet", 0) != DateTime.Now.Day)
+				{
+					dayWithNoInternet = DateTime.Now.Day;
+					PlayerPrefs.SetInt ("dayWithNoInternet", dayWithNoInternet);
+					SetNewDayWithoutInternet ( daysWithnoInternet++ );
+				}
+				if (daysWithnoInternet >= totalDaysWithNoInternet) {
+					SetDebbugText ("Please, connect your device to continue");
+					CheckIfDeviceIsStillRegistered = true;
+				} else {
+					CancelInvoke ();	
+					CheckExpirationValue ();
+				}
 			} else {
+				SetNewDayWithoutInternet ( 0 );
 				CancelInvoke ();
 				StartCoroutine( CheckingIfDeviceIsStillRegistered () );
 			}
@@ -90,7 +107,10 @@ public class ServerLogin : MonoBehaviour {
 			SetDebbugText ("Please, re-enter user and password");
 			GotoLogin ();
 		} else if (expiredYear != 0) {
-			SetDebbugText ("Licence expiration date: " + expiredYear + "/" + expiredMonth + "/" + expiredDay);
+			if (!hasInternet)
+				SetDebbugText ("Licence expiration date: " + expiredYear + "/" + expiredMonth + "/" + expiredDay + " - Not connected for " + daysWithnoInternet + " days");
+			else
+				SetDebbugText ("Licence expiration date: " + expiredYear + "/" + expiredMonth + "/" + expiredDay + " - connected ");
 			GotoMain ();
 		} else
 			GotoLogin ();
@@ -115,15 +135,6 @@ public class ServerLogin : MonoBehaviour {
 			return true;
 		}
 		return false;
-	}
-
-	public void Init()
-	{
-//		if (deviceName.Length > 1) {
-//			if (expired) 
-//				LoopForInternet ();
-//		} else
-//			LoopForInternet ();
 	}
 	void OnKeyboardFieldEntered(string text)
 	{
@@ -200,9 +211,13 @@ public class ServerLogin : MonoBehaviour {
 	}
 	void SetDebbugText(string text)
 	{
-		CancelInvoke ();
+		string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+		CancelInvoke ();		
+
 		Invoke ("ResetField", 5);
-		Events.OnKeyboardText( text );
+
+		if (sceneName == "000_Oculus")
+			Events.OnKeyboardText( text );
 	}
 	void ResetField()
 	{
@@ -267,7 +282,10 @@ public class ServerLogin : MonoBehaviour {
 	void GotoMain()
 	{
 		CancelInvoke ();
-		LoadScene ("002_Main", 1);
+		string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+		if(sceneName == "000_Oculus")
+			LoadScene ("002_Main", 1);
 	}
 	void GotoLogin()
 	{
@@ -325,6 +343,12 @@ public class ServerLogin : MonoBehaviour {
 			hasInternet = true;;
 		}
 	} 
+	void SetNewDayWithoutInternet(int value)
+	{
+		daysWithnoInternet = value;
+		PlayerPrefs.SetInt ("daysWithnoInternet", daysWithnoInternet);
+	}
+
 
 
 }
