@@ -44,13 +44,14 @@ public class ServerLogin : MonoBehaviour {
 	}
 	void Start()
 	{
-		if(ResetDevice)
-			PlayerPrefs.DeleteAll ();
-		
+	//	if(ResetDevice)
+		//	PlayerPrefs.DeleteAll ();
 		Events.OnKeyboardFieldEntered += OnKeyboardFieldEntered;
 	}
+
 	public void Init()
 	{		
+		print ("init");
 		LoadDataSaved ();
 		LoopForInternet ();
 		SetDebbugText ("Loading data");
@@ -216,7 +217,7 @@ public class ServerLogin : MonoBehaviour {
 
 		Invoke ("ResetField", 5);
 
-		if (sceneName == "000_Oculus")
+		//if (sceneName == "000_Oculus")
 			Events.OnKeyboardText( text );
 	}
 	void ResetField()
@@ -284,13 +285,13 @@ public class ServerLogin : MonoBehaviour {
 		CancelInvoke ();
 		string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-		if(sceneName == "000_Oculus")
+		//if(sceneName == "000_Oculus")
 			LoadScene ("002_Main", 1);
 	}
 	void GotoLogin()
 	{
 		CancelInvoke ();
-		Invoke ("Restart", 3);
+		Invoke ("Restart", 2);
 	}
 	void Restart()
 	{
@@ -301,6 +302,7 @@ public class ServerLogin : MonoBehaviour {
 	void LoadScene(string sceneName, float delay)
 	{
 		CancelInvoke ();
+		StopAllCoroutines ();
 		StartCoroutine (LoadSceneCoroutine(sceneName, delay));
 	}
 	IEnumerator LoadSceneCoroutine(string sceneName, float delay)

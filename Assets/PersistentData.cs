@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PersistentData : Singleton<PersistentData> {
+public class PersistentData : MonoBehaviour {
 
 	public bool DEBBUGER;
 	public int num_of_vaccines;
@@ -18,12 +18,20 @@ public class PersistentData : Singleton<PersistentData> {
 		FR,
 		AR
 	}
-	void Start()
+	public static PersistentData Instance { get; protected set; }
+
+	void Awake()
 	{
+		Instance = this;
+		print ("______ arranca");
+		DontDestroyOnLoad (this.gameObject);
 		audios = GetComponent<AudiosManager> ();
 		serverLogin = GetComponent<ServerLogin> ();
 		serverLogin.Init ();
-		DontDestroyOnLoad (this.gameObject);
+	}
+	void OnDestroy()
+	{
+		print ("se rompe");
 	}
 
 }

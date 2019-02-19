@@ -11,7 +11,7 @@ public class LoginUI : MonoBehaviour {
 
 	void Start()
 	{		
-		PersistentData.Instance.serverLogin.Init ();
+		//PersistentData.Instance.serverLogin.Init ();
 		if (PersistentData.Instance.serverLogin.usernameInserted == "")
 			titleField.text = "Insert your username";
 		else
